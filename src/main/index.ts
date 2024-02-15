@@ -1,9 +1,58 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
+const kill = require('tree-kill')
+
+let BACKEND_PROCESS: ChildProcessWithoutNullStreams
+
+const isDevelopmentEnv = () => {
+  return process.env.NODE_ENV === 'development'
+}
+
+const appPath = app.getAppPath()
+const userDataPath = app.getPath('userData')
+const spawnDjango = () => {
+  const djangoArgs = isDevelopmentEnv()
+    ? ['python\\Backend\\manage.py', 'runserver', '--noreload']
+    : ['Backend.exe', 'runserver', '--noreload']
+  console.log(djangoArgs)
+
+  const spawnOptions = {
+    cwd: isDevelopmentEnv() ? appPath : userDataPath,
+    shell: true
+  }
+
+  return spawn('python', djangoArgs, spawnOptions)
+}
+
+const startBackendServer = () => {
+  BACKEND_PROCESS = spawnDjango()
+  BACKEND_PROCESS.stdout.on('data', (data) => {
+    console.log(`stdout:\n${data}`)
+  })
+
+  BACKEND_PROCESS.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`)
+  })
+
+  BACKEND_PROCESS.on('error', (error) => {
+    console.error(`error: ${error.message}`)
+  })
+
+  BACKEND_PROCESS.on('close', (code) => {
+    console.log(`child process exited with code ${code}`)
+  })
+
+  return BACKEND_PROCESS
+}
 
 function createWindow(): void {
+  // start the backend
+  startBackendServer()
+  // show the port running on
+  console.log('Spawn on port: ', BACKEND_PROCESS.pid)
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -74,6 +123,10 @@ app.whenReady().then(() => {
   })
 })
 
+app.on('before-quit', async () => {
+  console.log('Ending our backend server.')
+  kill(BACKEND_PROCESS.pid)
+})
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -81,7 +134,8 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+  console.log('Ending our backend server darwin.')
+  kill(BACKEND_PROCESS.pid)
 })
-
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
