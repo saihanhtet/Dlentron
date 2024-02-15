@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UserRegisterSerializer, UserLoginSerializer, UserSerializer
 from rest_framework import permissions, status
-from rest_framework.exceptions import AuthenticationFailed
 from .custom_validations import custom_validation, validate_email, validate_password
 from rest_framework_simplejwt.authentication import JWTAuthentication as BaseJWTAuthentication
 
@@ -48,6 +47,9 @@ def generate_tokens(user):
 
 
 class check_token(APIView):
+    """
+    Check access token from a user
+    """
     permission_classes = (permissions.IsAuthenticated,)
     authentication_classes = [JWTAuthentication]
 
