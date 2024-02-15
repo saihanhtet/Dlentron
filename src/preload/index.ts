@@ -11,8 +11,8 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', {
       ...electronAPI,
-      saveToken: (authToken) => {
-        ipcRenderer.send('save-auth-token', authToken)
+      saveCookies: () => {
+        ipcRenderer.send('save-cookies')
       }
     })
     contextBridge.exposeInMainWorld('api', api)
@@ -22,11 +22,12 @@ if (process.contextIsolated) {
 } else {
   // @ts-ignore (define in dts)
   window.electron = {
-    ...electronAPI,
-    saveToken: (authToken) => {
-      ipcRenderer.send('save-auth-token', authToken)
-    }
+    ...electronAPI
   }
   // @ts-ignore (define in dts)
   window.api = api
 }
+
+ipcRenderer.on('set-cookies', (_, cookies) => {
+  localStorage.setItem('cookies', cookies)
+})

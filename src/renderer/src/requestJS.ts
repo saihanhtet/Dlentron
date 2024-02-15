@@ -26,17 +26,23 @@ interface RequestFunctionResponse {
   success: boolean
 }
 
-export function saveLoginData(authToken: string, userData: any): void {
-  localStorage.setItem('authToken', authToken)
-  saveUserData(userData)
-}
-
 export function saveUserData(userData: any): void {
   localStorage.setItem('userData', JSON.stringify(userData))
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem('authToken')
+export function getToken() {
+  const cookiesJson = localStorage.getItem('cookies')
+  if (cookiesJson) {
+    const cookies = JSON.parse(cookiesJson)
+    const auth_token = cookies?.[1]?.value || ''
+    if (auth_token.length !== 0) {
+      return auth_token
+    } else {
+      return ''
+    }
+  } else {
+    return ''
+  }
 }
 
 function handleError(error: any): string {
@@ -56,12 +62,12 @@ export const loginFunction = async (
       email,
       password
     })
+    // save the cookies in local storage
+    window.electron.saveCookies()
 
-    const { tokens, user, message } = res.data
-
-    if (tokens?.access) {
-      saveLoginData(tokens.access, user)
-      window.electron.saveToken(tokens.access)
+    const { user, message } = res.data
+    if (user) {
+      saveUserData(user)
     }
 
     return { response: message, success: true }
@@ -140,6 +146,28 @@ export const post = async (
     }
 
     const res = await requestClient.post(url, data, config)
+
+    return { response: res.data.message, success: true }
+  } catch (error) {
+    return { response: handleError(error), success: false }
+  }
+}
+
+// check token function method
+
+export async function checkToken(): Promise<RequestFunctionResponse> {
+  try {
+    const token = getToken()
+    if (!token) {
+      throw new Error('Authentication token not set')
+    }
+
+    const config: AxiosRequestConfig = {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+    const res = await requestClient.get('/api/check-token', config)
 
     return { response: res.data.message, success: true }
   } catch (error) {
