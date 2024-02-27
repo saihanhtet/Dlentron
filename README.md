@@ -1,6 +1,7 @@
 # Dlentron
 
-An Electron application with React and TypeScript
+An Electron application with React and TypeScript.
+
 Read my blog step by step: [https://hanhtetsan.hashnode.dev/electron-vite-with-django-desktop-offline-app]
 ## Recommended IDE Setup
 
