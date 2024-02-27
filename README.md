@@ -1,7 +1,7 @@
-# dlentron
+# Dlentron
 
 An Electron application with React and TypeScript
-
+Read my blog step by step: [https://hanhtetsan.hashnode.dev/electron-vite-with-django-desktop-offline-app]
 ## Recommended IDE Setup
 
 - [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
